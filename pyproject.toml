@@ -1,0 +1,15 @@
+[project]
+name = "xlsx-diff"
+version = "0.1.0"
+requires-python = ">=3.8"
+dependencies = [
+    "openpyxl",
+    "diff-match-patch",
+    "fastapi>=0.110",
+    "uvicorn[standard]",
+    "python-multipart",
+    "httpx",
+]
+
+[project.scripts]
+xlsx-diff-server = "backend.main:start"
