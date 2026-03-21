@@ -94,6 +94,27 @@ const FILTERS = [
 export default function DiffTable({ sheet }) {
   const [query,  setQuery]  = React.useState('')
   const [filter, setFilter] = React.useState('all')
+  const [colWidths, setColWidths] = React.useState({})
+
+  const handleMouseDown = (e, i) => {
+    e.preventDefault()
+    const startX = e.pageX
+    const th = e.target.parentElement
+    const startWidth = th.getBoundingClientRect().width
+
+    const handleMouseMove = (moveEvent) => {
+      const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX))
+      setColWidths(prev => ({ ...prev, [i]: newWidth }))
+    }
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   const flatRows = useMemo(() => flattenSheet(sheet), [sheet])
 
@@ -189,13 +210,29 @@ export default function DiffTable({ sheet }) {
           role="tabpanel"
           aria-labelledby={`tab-${sheet.name}`}
         >
+          <colgroup>
+            <col style={{ width: 52 }} />
+            <col style={{ width: 44 }} />
+            <col style={{ width: 44 }} />
+            {colHeaders.map((_, i) => (
+              <col key={i} style={{ width: colWidths[i] || 200 }} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
-              <th style={{ width: 24 }} aria-label="变更类型" />
+              <th aria-label="变更类型" />
               <th className="rn-head">旧行号</th>
               <th className="rn-head">新行号</th>
               {colHeaders.map((h, i) => (
-                <th key={i} title={h}>{h}</th>
+                <th key={i} title={h}>
+                  {h}
+                  <div
+                    className="col-resizer"
+                    onMouseDown={(e) => handleMouseDown(e, i)}
+                    onDoubleClick={() => setColWidths(prev => { const next = { ...prev }; delete next[i]; return next; })}
+                    title="双击恢复默认宽度，拖拽调整宽度"
+                  />
+                </th>
               ))}
             </tr>
           </thead>

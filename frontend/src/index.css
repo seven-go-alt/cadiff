@@ -422,11 +422,12 @@ body {
 }
 
 table.diff-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   font-family: var(--font-code);
   font-size: 13px;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 table.diff-table thead th {
@@ -449,8 +450,27 @@ table.diff-table td {
   padding: 3px var(--s3);
   vertical-align: top;
   border-bottom: 1px solid var(--border-subtle);
-  white-space: pre-wrap;
-  word-break: break-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Column resizer handle */
+.col-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  z-index: 10;
+  background-color: transparent;
+  transition: background-color 0.15s;
+}
+.col-resizer:hover, .col-resizer.is-resizing {
+  background-color: var(--accent);
 }
 
 /* Row-number cells */
