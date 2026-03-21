@@ -119,7 +119,7 @@ export default function DiffTable({ sheet }) {
   const flatRows = useMemo(() => flattenSheet(sheet), [sheet])
 
   // Derive column count and headers from backend data
-  const { numCols, colHeaders } = useMemo(() => {
+  const { numCols, activeCols, colHeaders } = useMemo(() => {
     // Backend provides row-0 as headers
     const backendHeaders = sheet.headers || []
 
@@ -138,7 +138,27 @@ export default function DiffTable({ sheet }) {
     for (let i = 0; i < max; i++) {
       headers.push(backendHeaders[i] || colLetter(i))
     }
-    return { numCols: max, colHeaders: headers }
+
+    // Find columns that actually contain data in the current hunks
+    const active = []
+    for (let i = 0; i < max; i++) {
+      let hasData = false
+      for (const row of flatRows) {
+        if (row.type === 'hunk-header') continue
+        const oldC = (row.old_cells || [])[i]
+        const newC = (row.new_cells || [])[i]
+        if ((oldC !== null && oldC !== undefined && String(oldC).trim() !== '') ||
+            (newC !== null && newC !== undefined && String(newC).trim() !== '')) {
+          hasData = true
+          break
+        }
+      }
+      if (hasData) {
+        active.push(i)
+      }
+    }
+
+    return { numCols: max, activeCols: active, colHeaders: headers }
   }, [flatRows, sheet.headers])
 
   // Apply filter + search to produce visible rows
@@ -214,8 +234,8 @@ export default function DiffTable({ sheet }) {
             <col style={{ width: 52 }} />
             <col style={{ width: 44 }} />
             <col style={{ width: 44 }} />
-            {colHeaders.map((_, i) => (
-              <col key={i} style={{ width: colWidths[i] || 200 }} />
+            {activeCols.map((ci) => (
+              <col key={ci} style={{ width: colWidths[ci] || 200 }} />
             ))}
           </colgroup>
           <thead>
@@ -223,17 +243,20 @@ export default function DiffTable({ sheet }) {
               <th aria-label="变更类型" />
               <th className="rn-head">旧行号</th>
               <th className="rn-head">新行号</th>
-              {colHeaders.map((h, i) => (
-                <th key={i} title={h}>
-                  {h}
-                  <div
-                    className="col-resizer"
-                    onMouseDown={(e) => handleMouseDown(e, i)}
-                    onDoubleClick={() => setColWidths(prev => { const next = { ...prev }; delete next[i]; return next; })}
-                    title="双击恢复默认宽度，拖拽调整宽度"
-                  />
-                </th>
-              ))}
+              {activeCols.map((ci) => {
+                const h = colHeaders[ci] || ''
+                return (
+                  <th key={ci} title={h}>
+                    {h}
+                    <div
+                      className="col-resizer"
+                      onMouseDown={(e) => handleMouseDown(e, ci)}
+                      onDoubleClick={() => setColWidths(prev => { const next = { ...prev }; delete next[ci]; return next; })}
+                      title="双击恢复默认宽度，拖拽调整宽度"
+                    />
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
@@ -241,7 +264,7 @@ export default function DiffTable({ sheet }) {
               if (row.type === 'hunk-header') {
                 return (
                   <tr key={idx} className="hunk-header">
-                    <td colSpan={3 + numCols}>{row.label}</td>
+                    <td colSpan={3 + activeCols.length}>{row.label}</td>
                   </tr>
                 )
               }
@@ -266,7 +289,8 @@ export default function DiffTable({ sheet }) {
                     {(row.type !== 'delete' && row.type !== 'replace-old')
                       ? (row.new_row_no ?? '') : ''}
                   </td>
-                  {paddedCells.map((cell, ci) => {
+                  {activeCols.map((ci) => {
+                    const cell = paddedCells[ci] || ''
                     let segments = null
                     if (row.type === 'replace-old' && row.inline) {
                       segments = row.inline[ci]?.filter(s => s.op !== 'insert') || null
