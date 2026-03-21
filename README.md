@@ -20,40 +20,48 @@ A full-stack web application designed to accurately compare two Excel (`.xlsx`) 
 
 ---
 
-## 🚀 Getting Started
+## 🚀 项目部署与启动
 
-### 1. Backend Setup (FastAPI)
+### 1. 后端设置 (FastAPI)
 
-Navigate to the project root and install the dependencies. It's recommended to use [uv](https://github.com/astral-sh/uv) for fast backend management.
+请在项目根目录下安装依赖。本项目推荐使用 [uv](https://github.com/astral-sh/uv) 进行快速的后端生态包管理。
 
 ```bash
-# Install dependencies and sync virtual environment
+# 安装依赖并同步当前虚拟环境
 uv sync
 
-# Start the FastAPI server (runs on http://localhost:8000)
+# 启动 FastAPI 服务器（默认运行在 http://localhost:8000）
 uv run uvicorn backend.main:app --reload --port 8000
 ```
 
-### 2. Frontend Setup (React + Vite)
+### 2. 前端设置 (React + Vite)
 
-Open a new terminal and navigate to the `frontend` folder.
+请在您的终端中新开一个标签页，并进入 `frontend` 文件夹：
 
 ```bash
 cd frontend
 
-# Install Node modules
+# 安装 Node 依赖包
 npm install
 
-# Start the Vite development server (runs on http://localhost:5173)
+# 启动 Vite 开发服务器（默认运行在 http://localhost:5173）
 npm run dev
 ```
 
-### 3. Usage
+### 3. 操作说明
 
-1. Open http://localhost:5173 in your browser.
-2. Drag and drop two `.xlsx` files into the "Old Version" and "New Version" targets.
-3. Click "Compare Files" to view the detailed diff result.
-4. Alternatively, switch to the "Git URL" tab to compare remote repository files.
+1. 在浏览器中打开 http://localhost:5173。
+2. 将需要对比的两个 `.xlsx` 文件分别拖拽到“旧版本”和“新版本”虚线框中。
+3. 点击“开始对比”按钮，页面将生成并显示详细差异。
+4. 或者，您也可以切换至“Git URL”选项卡，输入远程仓库链接和分支直接对比。
+
+### 4. 强制结束服务
+
+如果您在后台运行了这些服务，或者找不到当时启动服务的终端，可以在任意终端执行以下命令来强制清理占用端口（8000 和 5173）的进程：
+
+```bash
+lsof -ti :8000,5173 | xargs kill -9
+```
 
 ---
 
